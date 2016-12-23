@@ -26,7 +26,12 @@ print(data['total_clouds'])
 #data[cloud_vars].plot();
 #plt.show();
 
-#API_KEY = "3b12723f8ad8d1ba690886e190a5977c";
+
+#download API_KEY from file to keep it private.
+#with open('darksky_apikey', 'r') as f:
+#	API_KEY = f.read()
+#f.closed
+#API_KEY = API_KEY.rstrip()
 #LOCATION_ID = "CerrosDeVera";
 #LAT = -31.601354;
 #LNG = -56.812431;
