@@ -1,9 +1,9 @@
 using Convex, Mosek, PyPlot
 
-eh=readdlm("../datos/e_high.csv")
-em=readdlm("../datos/e_med.csv")
-el=readdlm("../datos/e_low.csv")
-d=readdlm("../datos/demanda.csv")
+eh=readdlm("datos/e_high.csv")
+em=readdlm("datos/e_med.csv")
+el=readdlm("datos/e_low.csv")
+d=readdlm("datos/demanda.csv")
 
 delta_t = 5/60; #(5 min)
 T=collect(5/60:delta_t:24*7)
