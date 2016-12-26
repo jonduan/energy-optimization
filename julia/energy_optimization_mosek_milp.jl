@@ -24,7 +24,9 @@ p_dmax = 40*delta_t;
 p_emax = 52*delta_t;
 
 #Construyo el modelo usando Convex
-solver=MosekSolver(MSK_DPAR_MIO_TOL_REL_GAP=0.02);
+println("****************************")
+println("Building Model")
+solver=MosekSolver(MSK_DPAR_MIO_TOL_REL_GAP=0.05,LOG=0);
 set_default_solver(solver);
 
 #Defino el modelo
@@ -47,6 +49,8 @@ p.constraints += y<=e;						#y=uso de la energia solar posible
 p.constraints += x[2:end]-x[1:end-1]<= p_bmax;			#maxima carga de bateria
 p.constraints += x[2:end]-x[1:end-1]>= -p_bmax		   	#maxima descarga de bateria
 
+println("Done")
+
 #resuelvo
 solve!(p)
 println("****************************")
@@ -56,14 +60,14 @@ println("Objective value: ", p.optval)
 uast = u.value;
 yast = y.value;
 
-writedlm("u.csv",[T uast]," ")
-writedlm("e.csv",[T e]," ")
-writedlm("y.csv",[T yast]," ")
-writedlm("d.csv",[T d]," ")
+writedlm("output/u.csv",[T uast]," ")
+writedlm("output/e.csv",[T e]," ")
+writedlm("output/y.csv",[T yast]," ")
+writedlm("output/d.csv",[T d]," ")
 
 
 xast = x.value
-writedlm("x.csv",[T2 xast]," ")
+writedlm("output/x.csv",[T2 xast]," ")
 
 plot(T,e)
 plot(T,d)
