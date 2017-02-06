@@ -1,4 +1,4 @@
-using Convex, Mosek, PyPlot
+using Convex, Gurobi, PyPlot
 
 eh=readdlm("datos/e_high.csv")
 em=readdlm("datos/e_med.csv")
@@ -26,7 +26,8 @@ p_emax = 52*delta_t;
 #Construyo el modelo usando Convex
 println("****************************")
 println("Building Model")
-solver=MosekSolver(MSK_DPAR_MIO_TOL_REL_GAP=0.05,LOG=0);
+#solver=MosekSolver(MSK_DPAR_MIO_TOL_REL_GAP=0.05,LOG=0);
+solver=GurobiSolver();
 set_default_solver(solver);
 
 #Defino el modelo
