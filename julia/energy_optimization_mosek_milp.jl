@@ -1,4 +1,4 @@
-using Convex, Gurobi, PyPlot
+using Convex, Mosek, PyPlot
 
 eh=readdlm("datos/e_high.csv")
 em=readdlm("datos/e_med.csv")
@@ -26,8 +26,8 @@ p_emax = 52*delta_t;
 #Construyo el modelo usando Convex
 println("****************************")
 println("Building Model")
-#solver=MosekSolver(MSK_DPAR_MIO_TOL_REL_GAP=0.05,LOG=0);
-solver=GurobiSolver();
+println("****************************")
+solver=MosekSolver(MSK_DPAR_MIO_TOL_REL_GAP=0.05,LOG=0);
 set_default_solver(solver);
 
 #Defino el modelo
@@ -51,6 +51,8 @@ p.constraints += x[2:end]-x[1:end-1]<= p_bmax;			#maxima carga de bateria
 p.constraints += x[2:end]-x[1:end-1]>= -p_bmax		   	#maxima descarga de bateria
 
 println("Done")
+println("****************************")
+
 
 #resuelvo
 solve!(p)
@@ -73,3 +75,6 @@ writedlm("output/x.csv",[T2 xast]," ")
 plot(T,e)
 plot(T,d)
 plot(T,p_dmax*uast)
+
+figure()
+plot(T2,xast/B_max)
