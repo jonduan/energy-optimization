@@ -40,13 +40,15 @@ u=Variable(n, :Bin);
 p=minimize(sum(u) + sum(abs(u[2:end]-u[1:end-1])));
 
 #agrego restricciones
-p.constraints += x>=0;						#bateria positiva
+#p.constraints += x>=0;						#bateria positiva
 p.constraints += x<=B_max;					#capacidad del banco
 p.constraints += y>=0;						#generacion solar positiva
 p.constraints += u>=0;
 p.constraints += u<=1;						#generacion diesel On-OFF
 p.constraints += x[2:end]-x[1:end-1] == y+p_dmax*u-d;		#carga de bateria
-p.constraints += x[end] == x[1];		                #bateria final igual a inicial
+#p.constraints += x[end] == x[1];		                #bateria final igual a inicial
+p.constraints += x[1] == B_max/2;
+p.constraints += x>=0.2*B_max;
 p.constraints += y<=e;						#y=uso de la energia solar posible
 p.constraints += x[2:end]-x[1:end-1]<= p_bmax;			#maxima carga de bateria
 p.constraints += x[2:end]-x[1:end-1]>= -p_bmax		   	#maxima descarga de bateria
@@ -76,6 +78,10 @@ writedlm("output/x.csv",[T2 xast]," ")
 plot(T,e)
 plot(T,d)
 plot(T,p_dmax*uast)
+show()
+readline()
 
 figure()
 plot(T2,xast/B_max)
+show()
+readline()
