@@ -1,0 +1,24 @@
+{
+  "version" : "1.0",
+  "rowId" : null,
+  "rowWeight" : null,
+  "dataFormat" : "CSV",
+  "dataFileContainsHeader" : true,
+  "attributes" : [ {
+    "attributeName" : "Dia del ano",
+    "attributeType" : "NUMERIC"
+  }, {
+    "attributeName" : "Minuto",
+    "attributeType" : "NUMERIC"
+  }, {
+    "attributeName" : "Temperatura",
+    "attributeType" : "NUMERIC"
+  }, {
+    "attributeName" : "Dia de la semana",
+    "attributeType" : "NUMERIC"
+  }, {
+    "attributeName" : "Radiacion",
+    "attributeType" : "NUMERIC"
+  }],
+  "excludedAttributeNames" : [ ]
+}
