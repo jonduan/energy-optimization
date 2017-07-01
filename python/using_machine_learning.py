@@ -12,9 +12,9 @@
 # or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 """
-Demonstrates how to use an ML Model, by setting the score threshold, 
-and kicks off a batch prediction job, which uses the ML Model to 
-generate predictions on new data.  This script needs the id of the 
+Demonstrates how to use an ML Model, by setting the score threshold,
+and kicks off a batch prediction job, which uses the ML Model to
+generate predictions on new data.  This script needs the id of the
 ML Model to use.  It also requires the score threshold.
 Useage:
     python use_model.py ml_model_id score_threshold s3_output_url
@@ -54,14 +54,18 @@ datos = 'Datos para ML del ' +str(dia)+'-'+ str(mes)+'-'+str(ano)
 #UNSCORED_DATA_S3_URL = "s3://predictions/prueba_ML_model.csv"
 UNSCORED_DATA_S3_URL = "s3://predictions/" + datos + '.csv'
 
-AWS_ACCESS_KEY_ID = 'AKIAJ5J4DPSLMJXM3RVQ'
-AWS_SECRET_ACCESS_KEY = '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'
+with open('../aws_apikey', 'r') as f:
+    AWS_ACCESS_KEY_ID = f.read()
+    AWS_SECRET_ACCESS_KEY = f.read()
 
+f.closed
+AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID.rstrip()
+AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY.rstrip()
 
 def use_model(model_id, threshold, schema_fn, output_s3, data_s3url):
     """Creates all the objects needed to build an ML Model & evaluate its quality.
     """
-    ml = boto3.client('machinelearning',region_name='us-east-1',aws_access_key_id=AWS_ACCESS_KEY_ID,aws_secret_access_key=AWS_SECRET_ACCESS_KEY) 
+    ml = boto3.client('machinelearning',region_name='us-east-1',aws_access_key_id=AWS_ACCESS_KEY_ID,aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     #ml = boto3.client('machinelearning',region_name='us-east-1')
     poll_until_completed(ml, model_id)  # Can't use it until it's COMPLETED
     #ml.update_ml_model(MLModelId=model_id, ScoreThreshold=threshold)
