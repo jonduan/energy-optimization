@@ -25,6 +25,8 @@ For example:
 #datos: https://s3.amazonaws.com/predictions/prueba_ML_model.ods
 #id modelo: ml-aCkdtmsoadc
 #resultado: https://s3.amazonaws.com/predictions/resultado
+#ejemplo: python using_machine_learning.py ml-aCkdtmsoadc 0.77 s3://predictions
+
 
 
 import base64
@@ -36,13 +38,30 @@ import sys
 import time
 import urlparse
 
+import boto
+import json
+import datetime
+
+from boto.s3.key import Key
+
 # The URL of the sample data in S3
-UNSCORED_DATA_S3_URL = "s3://predictions/prueba_ML_model.csv"
+now = datetime.datetime.now()
+dia = now.day
+mes= now.month
+ano = now.year
+
+datos = 'Datos para ML del ' +str(dia)+'-'+ str(mes)+'-'+str(ano)
+#UNSCORED_DATA_S3_URL = "s3://predictions/prueba_ML_model.csv"
+UNSCORED_DATA_S3_URL = "s3://predictions/" + datos + '.csv'
+
+AWS_ACCESS_KEY_ID = 'AKIAJ5J4DPSLMJXM3RVQ'
+AWS_SECRET_ACCESS_KEY = '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'
+
 
 def use_model(model_id, threshold, schema_fn, output_s3, data_s3url):
     """Creates all the objects needed to build an ML Model & evaluate its quality.
     """
-    ml = boto3.client('machinelearning',region_name='us-east-1',aws_access_key_id='AKIAJ5J4DPSLMJXM3RVQ',aws_secret_access_key='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') 
+    ml = boto3.client('machinelearning',region_name='us-east-1',aws_access_key_id=AWS_ACCESS_KEY_ID,aws_secret_access_key=AWS_SECRET_ACCESS_KEY) 
     #ml = boto3.client('machinelearning',region_name='us-east-1')
     poll_until_completed(ml, model_id)  # Can't use it until it's COMPLETED
     #ml.update_ml_model(MLModelId=model_id, ScoreThreshold=threshold)
@@ -59,6 +78,8 @@ def use_model(model_id, threshold, schema_fn, output_s3, data_s3url):
         OutputUri=output_s3
     )
     print("Created Batch Prediction %s" % bp_id)
+    poll_until_completed2(bp_id, 'bp')
+    return bp_id
 
 
 def poll_until_completed(ml, model_id):
@@ -91,6 +112,53 @@ def create_data_source_for_scoring(ml, data_s3url, schema_fn):
     print("Created Datasource %s for batch prediction" % ds_id)
     return ds_id
 
+def poll_until_completed2(entity_id, entity_type_str):
+    ml = boto.connect_machinelearning(aws_access_key_id=AWS_ACCESS_KEY_ID,aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    polling_function = {
+        'ds': ml.get_data_source,
+        'ml': ml.get_ml_model,
+        'ev': ml.get_evaluation,
+        'bp': ml.get_batch_prediction,
+    }[entity_type_str]
+    delay = 2
+    while True:
+        results = polling_function(entity_id)
+        status = results['Status']
+        message = results.get('Message', '')
+        now = str(datetime.datetime.now().time())
+        print("Object %s is %s (%s) at %s" % (entity_id, status, message, now))
+        if status in ['COMPLETED', 'FAILED', 'INVALID']:
+            break
+
+        # exponential backoff with jitter
+        delay *= random.uniform(1.1, 2.0)
+        time.sleep(delay)
+    print(json.dumps(results, indent=2))
+
+def download(bucket, filename,bp_id):
+    key = Key(bucket, filename)
+    headers = {}
+    mode = 'wb'
+    updating = False
+    if os.path.isfile(filename):
+        mode = 'r+b'
+        updating = True
+        print "File exists, adding If-Modified-Since header"
+        modified_since = os.path.getmtime(filename)
+        timestamp = datetime.datetime.utcfromtimestamp(modified_since)
+        headers['If-Modified-Since'] = timestamp.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    try:
+        #with open(filename, mode) as f:
+        with open("%s.csv.gz" % bp_id, mode) as f:
+            key.get_contents_to_file(f, headers)
+            f.truncate()
+    except boto.exception.S3ResponseError as e:
+        if not updating:
+            # got an error and we are not updating an existing file
+            # delete the file that was created due to mode = 'wb'
+            os.remove(filename)
+        return e.status
+    return 200
 
 if __name__ == "__main__":
     try:
@@ -106,5 +174,12 @@ if __name__ == "__main__":
     except:
         print(__doc__)
         raise
-    use_model(model_id, threshold, "demanda.csv.schema",
+    bp_id = use_model(model_id, threshold, "demanda.csv.schema",
               s3_output_url, UNSCORED_DATA_S3_URL)
+
+    bucket_name = 'predictions'
+    conn = boto.connect_s3(aws_access_key_id=AWS_ACCESS_KEY_ID,aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    bucket = conn.get_bucket(bucket_name)
+    descarga = 'batch-prediction/result/'+bp_id + '-' + datos +'.csv.gz'
+    print download(bucket, descarga,bp_id+ '-' + datos)
+    #print download(bucket, 'batch-prediction/result/%s-%s.gz' % bp_id % datos,bp_id)
